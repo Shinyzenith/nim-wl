@@ -1,5 +1,4 @@
 import futhark
-
 importc:
   sysPath "/usr/lib/clang/13.0.1/include"
   compilerArg "-DWLR_USE_UNSTABLE"
@@ -19,49 +18,40 @@ importc:
   "wlr/util/log.h"
   "wlr/types/wlr_xdg_shell.h"
 
-wlr_log_init(Wlrdebug,nil)
+# Setting up logging.
+wlr_log_init(Wlrdebug,nil);
 
-var server = try: wl_display_create()
-              except: quit(1)
+# Setting up basic needs for the server.
+var server = wl_display_create();
+var backend = wlr_backend_autocreate(server);
+var renderer = wlr_renderer_autocreate(backend);
+var allocator = wlr_allocator_autocreate(backend, renderer);
+var scene = wlr_scene_create();
+var xdg_shell = wlr_xdg_shell_create(server);
+var seat = wlr_seat_create(server, "nimwl-seat0");
+var cursor = wlr_cursor_create();
+var cursor_manager = wlr_xcursor_manager_create(nil, 24);
 
-var backend = try: wlr_backend_autocreate(server)
-                except: quit(1)
+# If we cannot initialize the server with the renderer then quit.
+if not wlr_renderer_init_wl_display(renderer, server): quit(1)
 
-var renderer = try: wlr_renderer_autocreate(backend)
-                except: quit(1)
+# Create the compositor and the data_device_manager
+discard wlr_compositor_create(server, renderer);
+discard wlr_data_device_manager_create(server);
 
-var allocator = try: wlr_allocator_autocreate(backend, renderer)
-                  except: quit(1)
+# Instantiate the WAYLAND_SOCKET.
+var socket = wl_display_add_socket_auto(server);
 
-var scene = try: wlr_scene_create()
-              except: quit(1)
-
-var xdg_shell = try: wlr_xdg_shell_create(server)
-              except: quit(1)
-
-var seat = try: wlr_seat_create(server, "nimwl-seat0")
-            except: quit(1)
-
-var cursor = try: wlr_cursor_create()
-                except: quit(1)
-
-var cursor_manager = try: wlr_xcursor_manager_create(nil, 24)
-                      except: quit(1)
-
-if not wlr_renderer_init_wl_display(renderer, server):
-  quit(1)
-
-discard wlr_compositor_create(server, renderer)
-
-discard wlr_data_device_manager_create(server)
-
-var socket = try: wl_display_add_socket_auto(server)
-              except: quit(1)
-
+# If we fail to start the backend then destrory the backend, the server and then quit.
 if not wlr_backend_start(backend):
-  wlr_backend_destroy(backend)
-  wl_display_destroy(server)
+  wlr_backend_destroy(backend);
+  wl_display_destroy(server);
+  quit(1);
 
-wl_display_run(server)
-wl_display_destroy_clients(server)
-wl_display_destroy(server)
+# Run the server, this function is blocking in nature.
+wl_display_run(server);
+
+# If we reach this line, it means that the compositor is no longer running,
+# so we destroy all clients and it's displays.
+wl_display_destroy_clients(server);
+wl_display_destroy(server);
