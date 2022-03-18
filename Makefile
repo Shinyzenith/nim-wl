@@ -23,6 +23,7 @@ clean:
 	@rm -f ./herb xdg-shell-protocol.h
 
 xdg-shell-protocol.h:
+	@mkdir -p protocols
 	@$(WAYLAND_SCANNER) server-header \
 		$(WAYLAND_PROTOCOLS)/stable/xdg-shell/xdg-shell.xml "./protocols/xdg-shell-protocol.h"
 
