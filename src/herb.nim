@@ -1,10 +1,12 @@
 import futhark
 importc:
   sysPath "/usr/lib/clang/13.0.1/include"
+  path "../protocols"
   compilerArg "-DWLR_USE_UNSTABLE"
-  "wayland-server.h"
-  "wayland-server-core.h"
+  "wayland-server-core.h" 
   "wayland-server-protocol.h"
+  "wayland-server.h"
+  "wayland-util.h"
   "wlr/backend.h"
   "wlr/render/allocator.h"
   "wlr/render/wlr_renderer.h"
@@ -15,8 +17,10 @@ importc:
   "wlr/types/wlr_scene.h"
   "wlr/types/wlr_seat.h"
   "wlr/types/wlr_xcursor_manager.h"
-  "wlr/util/log.h"
   "wlr/types/wlr_xdg_shell.h"
+  "wlr/util/log.h"
+
+#TODO: Use OOP to clean this up, currently this is just a POC stage.
 
 # Setting up logging.
 wlr_log_init(Wlrdebug,nil);
@@ -38,6 +42,16 @@ if not wlr_renderer_init_wl_display(renderer, server): quit(1)
 # Create the compositor and the data_device_manager
 discard wlr_compositor_create(server, renderer);
 discard wlr_data_device_manager_create(server);
+
+# Creating a callback for when we recieve a new_output event from the server backend.
+proc new_output_callback(listener:ptr structwllistener_18485576, data:pointer){.cdecl.} =
+  echo "new output detected"
+
+# Create the listener (wl_listener) with our callback assigned to it's notify field.
+var new_output =  structwllistener_18485576(notify: new_output_callback);
+
+# Adding our wl_listener object to the list of callbacks to fire on new_output event.
+wl_list_insert(backend.events.new_output.listener_list.prev, addr(new_output.link));
 
 # Instantiate the WAYLAND_SOCKET.
 var socket = wl_display_add_socket_auto(server);
