@@ -1,30 +1,4 @@
-import futhark
-importc:
-  sysPath "/usr/lib/clang/13.0.1/include"
-  path "../protocols"
-  compilerArg "-DWLR_USE_UNSTABLE"
-  "wayland-server-core.h" 
-  "wayland-server-protocol.h"
-  "wayland-server.h"
-  "wayland-util.h"
-  "wlr/backend.h"
-  "wlr/render/allocator.h"
-  "wlr/render/wlr_renderer.h"
-  "wlr/types/wlr_compositor.h"
-  "wlr/types/wlr_compositor.h"
-  "wlr/types/wlr_cursor.h"
-  "wlr/types/wlr_data_device.h"
-  "wlr/types/wlr_output.h"
-  "wlr/types/wlr_scene.h"
-  "wlr/types/wlr_seat.h"
-  "wlr/types/wlr_xcursor_manager.h"
-  "wlr/types/wlr_xdg_shell.h"
-  "wlr/util/log.h"
-
-# Re-defining a few type names because the ones from futhark are terrible.
-type
-  wlr_output* = structwllistener_18485576
-  wl_listener* = structwllistener_18485576
+include libherb
 
 #TODO: Use OOP to clean this up, currently this is just a POC stage.
 
@@ -45,23 +19,19 @@ var cursor_manager = wlr_xcursor_manager_create(nil, 24);
 # If we cannot initialize the server with the renderer then quit.
 if not wlr_renderer_init_wl_display(renderer, server): quit(1)
 
-# Create the compositor and the data_device_manager
+# Create the compositor and the data_device_manager and get rid of it's returned data.
 discard wlr_compositor_create(server, renderer);
 discard wlr_data_device_manager_create(server);
 
-# Creating a callback for when we recieve a new_output event from the server backend.
-proc new_output_callback(listener:ptr wlr_output, data:pointer){.cdecl.} =
-  echo "New output detected"
-  # Casting the data to a wlr_output object for later user to initialize the renderer.
-  var wlr_output: wlr_output = cast[wlr_output](data);
-  # This will work once I switch to OOP model.
-  # discard wlr_output_init_render(addr(wlr_output), allocator, renderer)
+# Creating a callback for when the new_output event is fired by the backend.
+var new_output =  wl_listener(
+  notify: proc (listener:ptr wlr_output, data:pointer){.cdecl.} =
+    echo "New output detected"
+    var wlr_output: wlr_output = cast[wlr_output](data);
+  );
 
-# Create the listener (wl_listener) with our callback assigned to it's notify field.
-var new_output =  wl_listener(notify: new_output_callback);
-
-# Adding our wl_listener object to the list of callbacks to fire on new_output event.
-wl_list_insert(backend.events.new_output.listener_list.prev, addr(new_output.link));
+# Assigning our callback to the new_output event fired by the backend when a new monitor / output is plugged in.
+wl_signal_add(backend.events.new_output, new_output);
 
 # Instantiate the WAYLAND_SOCKET.
 var socket = wl_display_add_socket_auto(server);
