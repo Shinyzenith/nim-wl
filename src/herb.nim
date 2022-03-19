@@ -6,7 +6,6 @@ wlr_log_init(Wlrdebug,nil);
 # Setting up basic needs for the herb_server.
 var herb_server = init_server();
 
-echo cast[int](herb_server)
 # Assigning our callback to the new_output event fired by the backend when a new monitor / output is plugged in.
 wl_signal_add(
   herb_server.backend.events.new_output,

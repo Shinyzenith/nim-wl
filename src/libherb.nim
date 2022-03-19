@@ -44,7 +44,7 @@ type
   wlr_xdg_shell = structwlrxdgshell
 
 # Re-defining a inline functions because opir currently does not parse inline functions. This is straight from the header.
-proc wl_signal_add(wl_signal: wl_signal, wl_listener: wl_listener) =
+proc wl_signal_add(wl_signal: wl_signal, wl_listener: var wl_listener) =
   wl_list_insert(wl_signal.listener_list.prev, unsafeAddr(wl_listener.link));
 
 template fieldParentPtr(T:typedesc, field: untyped, data: pointer): auto =
