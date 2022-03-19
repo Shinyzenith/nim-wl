@@ -11,7 +11,6 @@ importc:
   "wlr/render/allocator.h"
   "wlr/render/wlr_renderer.h"
   "wlr/types/wlr_compositor.h"
-  "wlr/types/wlr_compositor.h"
   "wlr/types/wlr_cursor.h"
   "wlr/types/wlr_data_device.h"
   "wlr/types/wlr_output.h"
@@ -21,11 +20,22 @@ importc:
   "wlr/types/wlr_xdg_shell.h"
   "wlr/util/log.h"
 
-# Re-defining a few type names because the ones from futhark are terrible.
+# Re-defining a few type names to match the convention.
 type
-  wlr_output* = structwllistener_18485576
-  wl_listener* = structwllistener_18485576
-  wl_signal* = structwlsignal_18485891
+  wl_display = structwldisplay
+  wl_listener = structwllistener
+  wl_signal = structwlsignal
+  wlr_backend = structwlrbackend
+  wlr_output = structwllistener
+  wlr_renderer = structwlrrenderer
+  wlr_allocator = structwlrallocator
+  wlr_scene = structwlrscene
+  wlr_xdg_shell = structwlrxdgshell
+  wlr_seat = structwlrseat
+  wlr_cursor = structwlrcursor
+  wlr_xcursor_manager = structwlrxcursormanager
+  wlr_compositor = structwlrcompositor
+  wlr_data_device_manager = structwlrdatadevicemanager
 
 # Re-defining a inline functions because opir currently does not parse inline functions.
 proc wl_signal_add(wl_signal: wl_signal, wl_listener: wl_listener) =
