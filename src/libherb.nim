@@ -18,6 +18,7 @@ importc:
   "wlr/types/wlr_cursor.h"
   "wlr/types/wlr_data_device.h"
   "wlr/types/wlr_output.h"
+  "wlr/types/wlr_output_layout.h"
   "wlr/types/wlr_scene.h"
   "wlr/types/wlr_seat.h"
   "wlr/types/wlr_xcursor_manager.h"
@@ -29,18 +30,22 @@ type
   wl_display = structwldisplay
   wl_listener = structwllistener
   wl_signal = structwlsignal
-  wlr_backend = structwlrbackend
-  wlr_output = structwllistener
-  wlr_renderer = structwlrrenderer
   wlr_allocator = structwlrallocator
-  wlr_scene = structwlrscene
-  wlr_xdg_shell = structwlrxdgshell
-  wlr_seat = structwlrseat
-  wlr_cursor = structwlrcursor
-  wlr_xcursor_manager = structwlrxcursormanager
+  wlr_backend = structwlrbackend
   wlr_compositor = structwlrcompositor
+  wlr_cursor = structwlrcursor
   wlr_data_device_manager = structwlrdatadevicemanager
+  wlr_output = structwlroutput
+  wlr_output_layout = structwlroutputlayout
+  wlr_renderer = structwlrrenderer
+  wlr_scene = structwlrscene
+  wlr_seat = structwlrseat
+  wlr_xcursor_manager = structwlrxcursormanager
+  wlr_xdg_shell = structwlrxdgshell
 
 # Re-defining a inline functions because opir currently does not parse inline functions. This is straight from the header.
 proc wl_signal_add(wl_signal: wl_signal, wl_listener: wl_listener) =
   wl_list_insert(wl_signal.listener_list.prev, unsafeAddr(wl_listener.link));
+
+template fieldParentPtr(T:typedesc, field: untyped, data: pointer): auto =
+  cast[ptr T](cast[int](data) - offsetOf(T, field))[]
