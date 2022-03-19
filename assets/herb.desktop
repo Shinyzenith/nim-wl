@@ -1,0 +1,6 @@
+[Desktop Entry]
+Name=Herb
+Comment=A wlroots based window manager written in Nim
+Exec=herb
+DesktopNames=Herb
+Type=Application

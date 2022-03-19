@@ -1,7 +1,6 @@
 BINARY := herb
 BUILDFLAGS := -d:release
 TARGET_DIR := /usr/bin
-SOURCE_DIR := ./$(BINARY)
 
 WAYLAND_PROTOCOLS=$(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_SCANNER=$(shell pkg-config --variable=wayland_scanner wayland-scanner)
@@ -13,7 +12,7 @@ build: xdg-shell-protocol.h
 
 install: xdg-shell-protocol.h
 	@mkdir -p $(TARGET_DIR)
-	@cp $(SOURCE_DIR)/$(BINARY) $(TARGET_DIR)
+	@cp $(BINARY) $(TARGET_DIR)
 	@chmod +x $(TARGET_DIR)/$(BINARY)
 
 uninstall:
