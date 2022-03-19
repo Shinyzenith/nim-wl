@@ -14,6 +14,7 @@ importc:
   "wlr/types/wlr_compositor.h"
   "wlr/types/wlr_cursor.h"
   "wlr/types/wlr_data_device.h"
+  "wlr/types/wlr_output.h"
   "wlr/types/wlr_scene.h"
   "wlr/types/wlr_seat.h"
   "wlr/types/wlr_xcursor_manager.h"
@@ -45,7 +46,11 @@ discard wlr_data_device_manager_create(server);
 
 # Creating a callback for when we recieve a new_output event from the server backend.
 proc new_output_callback(listener:ptr structwllistener_18485576, data:pointer){.cdecl.} =
-  echo "new output detected"
+  echo "New output detected"
+  # Casting the data to a wlr_output object for later user to initialize the renderer.
+  var wlr_output: structwlroutput_18485660 = cast[structwlroutput_18485660](data);
+  # This will work once I switch to OOP model.
+  # discard wlr_output_init_render(addr(wlr_output), allocator, renderer)
 
 # Create the listener (wl_listener) with our callback assigned to it's notify field.
 var new_output =  structwllistener_18485576(notify: new_output_callback);
