@@ -1,5 +1,6 @@
 include libherb
 
+# Defining our server object.
 type
   HerbServer* = object
     server: ptr wl_display
@@ -14,8 +15,9 @@ type
     compositor: ptr wlr_compositor
     data_device_manager: ptr wlr_data_device_manager
 
-proc init_server():HerbServer = 
 
+# Function to create the server.
+proc init_server():HerbServer = 
   var server = wl_display_create();
   var backend = wlr_backend_autocreate(server);
   var renderer = wlr_renderer_autocreate(backend);
@@ -28,6 +30,10 @@ proc init_server():HerbServer =
   var compositor = wlr_compositor_create(server, renderer);
   var data_device_manager = wlr_data_device_manager_create(server);
 
+  # If we cannot initialize the server with the renderer then quit.
+  if not wlr_renderer_init_wl_display(renderer, server): quit(1)
+
+  # Return the data.
   return HerbServer(
     server: server,
     backend: backend,
@@ -41,3 +47,10 @@ proc init_server():HerbServer =
     compositor: compositor,
     data_device_manager: data_device_manager,
   )
+
+proc deinit_server(server: ptr HerbServer):void = 
+  echo "Deinitializing the server."
+  wlr_backend_destroy(server.backend);
+  wl_display_destroy_clients(server.server);
+  wl_display_destroy(server.server);
+  quit(1);
