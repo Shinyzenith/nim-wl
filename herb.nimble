@@ -10,5 +10,4 @@ bin           = @["herb"]
 
 # Dependencies
 
-requires "nim >= 1.4.8"
-requires "futhark"
+requires "nim >= 1.4.8", "futhark"

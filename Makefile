@@ -14,9 +14,11 @@ install: xdg-shell-protocol.h
 	@mkdir -p $(TARGET_DIR)
 	@cp $(BINARY) $(TARGET_DIR)
 	@chmod +x $(TARGET_DIR)/$(BINARY)
+	@cp ./assets/herb.desktop /usr/share/wayland-sessions/
 
 uninstall:
 	@rm -f $(TARGET_DIR)/$(BINARY)
+	@rm -f /usr/share/wayland-sessions/$(BINRAY).desktop
 
 clean:
 	@rm -f ./herb xdg-shell-protocol.h

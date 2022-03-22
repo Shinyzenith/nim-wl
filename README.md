@@ -11,11 +11,11 @@ NOTE: This project is a WIP.
 1. Nim
 1. Nimble
 
-
-
 ```bash
 git clone https://github.com/waycrate/nim-wl
 cd nim-wl
 make
 ./herb
 ```
+
+If you get errors regarding clang path, change the path to clang include directory in `libherb.nim`.
