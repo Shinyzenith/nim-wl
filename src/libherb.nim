@@ -9,6 +9,10 @@ importc:
   path "../protocols"
 
   path "/usr/include/pixman-1"
+  path "/usr/include/wayland"
+  path "/usr/include/libxkbcommon"
+
+  "time.h"
   "wayland-server-core.h" 
   "wayland-server-protocol.h"
   "wayland-server.h"
@@ -21,6 +25,7 @@ importc:
   "wlr/types/wlr_data_device.h"
   "wlr/types/wlr_output.h"
   "wlr/types/wlr_output_layout.h"
+  "wlr/types/wlr_scene.h"
   "wlr/types/wlr_scene.h"
   "wlr/types/wlr_seat.h"
   "wlr/types/wlr_xcursor_manager.h"
@@ -53,7 +58,7 @@ proc wl_signal_add*(wl_signal: wl_signal, wl_listener: var wl_listener) =
   wl_list_insert(wl_signal.listener_list.prev, unsafeAddr(wl_listener.link));
 
 # A template to get a pointer to the parent struct from the pointer of any field.
-template fieldParentPtr*(T:typedesc, field: untyped, data: pointer): auto =
+template fieldParentPtr*(T: typedesc, field: untyped, data: pointer): auto =
   # Since nim natively doesn't support pointer math, we get the int representation of the current pointer of a field, get the offset between field 
   # and the type that we passed in bytes, walk back said number of bytes so we're at the parent struct and then recast into a pointer of the type passed.
   cast[ptr T](cast[int](data) - offsetOf(T, field))[]
@@ -87,12 +92,12 @@ type
 # Defining the output object.
 type
   HerbOutput* = object
-    herb_server*: ptr HerbServer
+    server*: ptr HerbServer
     output*: ptr wlr_output
-    new_frame*: ptr wl_listener
+    new_frame*: wl_listener
 
 # Function to create the server.
-proc init_server*():HerbServer = 
+proc init_server*(): HerbServer = 
   result.server = wl_display_create();
   result.backend = wlr_backend_autocreate(result.server);
   result.renderer = wlr_renderer_autocreate(result.backend);
@@ -113,7 +118,7 @@ proc init_server*():HerbServer =
   result.data_device_manager = wlr_data_device_manager_create(result.server);
 
   result.new_output = wl_listener(
-    notify: proc (listener:ptr wl_listener, data:pointer){.cdecl.} =
+    notify: proc (listener: ptr wl_listener, data: pointer){.cdecl.} =
     echo "New Output Detected"
     var herb_server = fieldParentPtr(HerbServer,new_output, listener);
     var wlr_output = cast[ptr wlr_output](data);
@@ -124,11 +129,29 @@ proc init_server*():HerbServer =
       wlr_output_enable(wlr_output, true);
       if not wlr_output_commit(wlr_output):
         return
+
+    var herb_output = HerbOutput(
+      server: addr(herb_server),
+      output: wlr_output,
+      new_frame: wl_listener(
+        notify: proc(listener: ptr wl_listener, data: pointer){.cdecl.}=
+          echo "New Frame Detected";
+          var output = fieldParentPtr(HerbOutput, new_frame, listener);
+          var scene_output = wlr_scene_get_scene_output(output.server.scene, output.output);
+          # I don't know what I'm discarding. Make sure to check this later.
+          discard wlr_scene_output_commit(scene_output);
+          var time: structtimespec;
+          discard clock_gettime(Clockmonotonic, addr(time));
+          wlr_scene_output_send_frame_done(scene_output, addr(time));
+      )
+    )
+    wl_signal_add(wlr_output.events.frame, herb_output.new_frame);
+
     wlr_output_layout_add_auto(herb_server.output_layout, wlr_output);
   )
 
   result.new_surface = wl_listener(
-    notify: proc (listener:ptr wl_listener, data:pointer){.cdecl.} =
+    notify: proc (listener: ptr wl_listener, data: pointer){.cdecl.} =
     echo "New Surface Detected"
     var herb_server = fieldParentPtr(HerbServer, new_surface, listener);
     var wlr_xdg_surface = cast[ptr wlr_xdg_surface](data);
@@ -152,9 +175,3 @@ proc deinit_server*(server: ptr HerbServer):void =
   # Destroy the display / server.
   wl_display_destroy(server.server);
   quit(1);
-
-# We just initalize the wl_listener and return the object, the rest should be handled by the server struct.
-#proc init_output*():HerbOutput =
-  #result.wl_listener(
-    #notify: proc(listener:ptr wl_listener, data:pointer){.cdecl.}=
-#)
