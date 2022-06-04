@@ -4,6 +4,9 @@ Feel free to open github issues for any line of code that you do not understand.
 
 NOTE: This project is a WIP.
 
+# Acknowledgement:
+Thank you <a target="_blank" href="https://github.com/pmunch">PMunch</a> and <a target="_blank" href="https://github.com/beef331">ElegantBeef</a> for addressing my stupid newbie questions regarding futhark.
+
 # Building:
 
 ## Dependencies:

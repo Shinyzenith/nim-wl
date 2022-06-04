@@ -1,14 +1,17 @@
 BINARY := herb
-BUILDFLAGS := -d:release
+RELEASEFLAGS := -d:release
 TARGET_DIR := /usr/bin
 
 WAYLAND_PROTOCOLS=$(shell pkg-config --variable=pkgdatadir wayland-protocols)
 WAYLAND_SCANNER=$(shell pkg-config --variable=wayland_scanner wayland-scanner)
 
-all: build
+all: dev
 
-build: xdg-shell-protocol.h
-	@nimble build $(BUILDFLAGS) --verbose --passL:"-lwayland-server" --passL:"-lwlroots" --passL:"-lpixman-1" --maxLoopIterationsVM=99999999 --showAllMismatches:on
+dev: xdg-shell-protocol.h
+	@nimble build --verbose --passL:"-lwayland-server" --passL:"-lwlroots" --passL:"-lpixman-1" --maxLoopIterationsVM=99999999 --showAllMismatches:on
+
+release: xdg-shell-protocol.h
+	@nimble build $(RELEASEFLAGS) --verbose --passL:"-lwayland-server" --passL:"-lwlroots" --passL:"-lpixman-1" --maxLoopIterationsVM=99999999 --showAllMismatches:on
 
 install: xdg-shell-protocol.h
 	@mkdir -p $(TARGET_DIR)
@@ -28,4 +31,4 @@ xdg-shell-protocol.h:
 	@$(WAYLAND_SCANNER) server-header \
 		$(WAYLAND_PROTOCOLS)/stable/xdg-shell/xdg-shell.xml "./protocols/xdg-shell-protocol.h"
 
-.PHONY: check all install build run
+.PHONY: check all install release run dev
